@@ -103,7 +103,7 @@ func main() {
 		// Update channel topic to reflect current deploy status
 		slackBot.AddDeployEventHandler(bot.NewSlackTopicManager(api))
 		// Send direct messages to users mentioned in deploy subject
-		slackBot.AddDeployEventHandler(bot.NewSlackIMNotifier(api))
+		slackBot.AddDeployEventHandler(bot.NewSlackIMNotifier(api, 2*time.Hour))
 	} else {
 		log.Printf("SLACK_WEBAPI_TOKEN env variable not set, channel topic notifications are disabled")
 	}

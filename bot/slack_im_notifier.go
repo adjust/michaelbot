@@ -3,26 +3,52 @@ package bot
 import (
 	"fmt"
 	"log"
+	"sync"
+	"time"
 
 	"github.com/adjust/michaelbot/deploy"
 	"github.com/adjust/michaelbot/slack"
 )
 
 type SlackIMNotifier struct {
-	im    *slack.InstantMessenger
-	users *slack.TeamDirectory
+	im             *slack.InstantMessenger
+	users          *slack.TeamDirectory
+	warningTimeout time.Duration
+	timer          *time.Timer
+	mutex          sync.Mutex
 }
 
-func NewSlackIMNotifier(api *slack.WebAPI) *SlackIMNotifier {
+func NewSlackIMNotifier(api *slack.WebAPI, warningTimeout time.Duration) *SlackIMNotifier {
 	return &SlackIMNotifier{
-		im:    slack.NewInstantMessenger(api),
-		users: slack.NewTeamDirectory(api),
+		im:             slack.NewInstantMessenger(api),
+		users:          slack.NewTeamDirectory(api),
+		warningTimeout: warningTimeout,
 	}
 }
 
-func (notifier *SlackIMNotifier) DeployStarted(_ string, _ deploy.Deploy) {}
+func (notifier *SlackIMNotifier) DeployStarted(_ string, d deploy.Deploy) {
+	notifier.mutex.Lock()
+	defer notifier.mutex.Unlock()
+
+	notifier.timer = time.AfterFunc(notifier.warningTimeout, func() {
+		message := slack.Message{
+			Text: fmt.Sprintf("Your deploy %q was started %s ago. Are you still deploying?", d.Subject, notifier.warningTimeout),
+		}
+
+		err := notifier.im.SendMessage(d.User, message)
+		if err != nil {
+			log.Printf("failed to send an instant message to %s: %s", d.User.Name, err)
+		}
+	})
+}
 
 func (notifier *SlackIMNotifier) DeployCompleted(_ string, d deploy.Deploy) {
+	notifier.mutex.Lock()
+	if notifier.timer != nil {
+		notifier.timer.Stop()
+	}
+	notifier.mutex.Unlock()
+
 	var (
 		user slack.User
 		err  error
@@ -54,4 +80,10 @@ func (notifier *SlackIMNotifier) DeployCompleted(_ string, d deploy.Deploy) {
 	}
 }
 
-func (notifier *SlackIMNotifier) DeployAborted(_ string, _ deploy.Deploy) {}
+func (notifier *SlackIMNotifier) DeployAborted(_ string, _ deploy.Deploy) {
+	notifier.mutex.Lock()
+	if notifier.timer != nil {
+		notifier.timer.Stop()
+	}
+	notifier.mutex.Unlock()
+}

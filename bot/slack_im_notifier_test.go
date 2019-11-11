@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/adjust/michaelbot/bot"
 	"github.com/adjust/michaelbot/deploy"
@@ -68,7 +69,7 @@ func TestSlackIMNotifier_DeployCompleted(t *testing.T) {
 	api := slack.NewWebAPI(webAPIToken, nil)
 	api.BaseURL = server.URL
 
-	notifier := bot.NewSlackIMNotifier(api)
+	notifier := bot.NewSlackIMNotifier(api, time.Hour)
 	notifier.DeployCompleted("", d)
 
 	assert.Equal(t, 1, requestNum.UsersList) // nonExistingRecipient will not hit the cache
@@ -89,4 +90,138 @@ func TestSlackIMNotifier_DeployCompleted(t *testing.T) {
 		assert.Contains(t, receivers, "DMR1")
 		assert.Contains(t, receivers, "DMR2")
 	}
+}
+
+func TestSlackIMNotifier_DeployStart_Warning(t *testing.T) {
+	const webAPIToken = "xxxxx-token1"
+
+	d := deploy.Deploy{
+		User:    slack.User{ID: "U1", Name: "author"},
+		Subject: "Deploy subject",
+	}
+
+	mux := http.NewServeMux()
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	var (
+		requestNum struct{ IMPostMessage, IMOpen int }
+		receivers  []string
+	)
+
+	mux.HandleFunc("/im.open", func(w http.ResponseWriter, r *http.Request) {
+		requestNum.IMOpen++
+		assert.Equal(t, webAPIToken, r.FormValue("token"))
+
+		if userID := r.FormValue("user"); assert.NotEmpty(t, userID) {
+			fmt.Fprintf(w, `{"ok":true,"channel":{"id":"DM%s"}}`, userID)
+		} else {
+			fmt.Fprint(w, `{"ok":false,"error":"user_not_found"}`)
+		}
+	})
+
+	mux.HandleFunc("/chat.postMessage", func(w http.ResponseWriter, r *http.Request) {
+		requestNum.IMPostMessage++
+		assert.Equal(t, webAPIToken, r.FormValue("token"))
+
+		if channelID := r.FormValue("channel"); assert.NotEmpty(t, channelID) {
+			receivers = append(receivers, channelID)
+		}
+
+		if msg := r.FormValue("text"); assert.NotEmpty(t, msg) {
+			assert.Contains(t, msg, `Your deploy "Deploy subject" was started`)
+		}
+
+		fmt.Fprint(w, `{"ok":true}`)
+	})
+
+	api := slack.NewWebAPI(webAPIToken, nil)
+	api.BaseURL = server.URL
+
+	notifier := bot.NewSlackIMNotifier(api, 10*time.Millisecond)
+	notifier.DeployStarted("", d)
+	time.Sleep(20 * time.Millisecond)
+
+	assert.Equal(t, 1, requestNum.IMOpen)
+	assert.Equal(t, 1, requestNum.IMPostMessage)
+
+	if assert.Len(t, receivers, 1) {
+		assert.Contains(t, receivers, "DMU1")
+	}
+
+	notifier.DeployCompleted("", d)
+}
+
+func TestSlackIMNotifier_DeployStart_CompletedBeforeWarning(t *testing.T) {
+	const webAPIToken = "xxxxx-token1"
+
+	d := deploy.Deploy{
+		User:    slack.User{ID: "U1", Name: "author"},
+		Subject: "Deploy subject",
+	}
+
+	mux := http.NewServeMux()
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	var (
+		requestNum struct{ IMPostMessage, IMOpen int }
+	)
+
+	mux.HandleFunc("/im.open", func(w http.ResponseWriter, r *http.Request) {
+		requestNum.IMOpen++
+		fmt.Println(r)
+	})
+
+	mux.HandleFunc("/chat.postMessage", func(w http.ResponseWriter, r *http.Request) {
+		requestNum.IMPostMessage++
+	})
+
+	api := slack.NewWebAPI(webAPIToken, nil)
+	api.BaseURL = server.URL
+
+	notifier := bot.NewSlackIMNotifier(api, 100*time.Millisecond)
+	notifier.DeployStarted("", d)
+	time.Sleep(10 * time.Millisecond)
+	notifier.DeployCompleted("", d)
+
+	assert.Equal(t, 0, requestNum.IMOpen)
+	assert.Equal(t, 0, requestNum.IMPostMessage)
+}
+
+func TestSlackIMNotifier_DeployStart_AbortBeforeWarning(t *testing.T) {
+	const webAPIToken = "xxxxx-token1"
+
+	d := deploy.Deploy{
+		User:    slack.User{ID: "U1", Name: "author"},
+		Subject: "Deploy subject",
+	}
+
+	mux := http.NewServeMux()
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	var (
+		requestNum struct{ IMPostMessage, IMOpen int }
+	)
+
+	mux.HandleFunc("/im.open", func(w http.ResponseWriter, r *http.Request) {
+		requestNum.IMOpen++
+		fmt.Println(r)
+	})
+
+	mux.HandleFunc("/chat.postMessage", func(w http.ResponseWriter, r *http.Request) {
+		requestNum.IMPostMessage++
+	})
+
+	api := slack.NewWebAPI(webAPIToken, nil)
+	api.BaseURL = server.URL
+
+	notifier := bot.NewSlackIMNotifier(api, 100*time.Millisecond)
+	notifier.DeployStarted("", d)
+	time.Sleep(10 * time.Millisecond)
+	notifier.DeployAborted("", d)
+
+	assert.Equal(t, 0, requestNum.IMOpen)
+	assert.Equal(t, 0, requestNum.IMPostMessage)
 }
