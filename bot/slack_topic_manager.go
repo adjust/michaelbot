@@ -4,8 +4,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/andrewslotin/michael/deploy"
-	"github.com/andrewslotin/michael/slack"
+	"github.com/adjust/michaelbot/deploy"
+	"github.com/adjust/michaelbot/slack"
 )
 
 const (

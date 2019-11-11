@@ -11,12 +11,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/andrewslotin/michael/auth"
-	"github.com/andrewslotin/michael/bot"
-	"github.com/andrewslotin/michael/dashboard"
-	"github.com/andrewslotin/michael/deploy"
-	"github.com/andrewslotin/michael/server"
-	"github.com/andrewslotin/michael/slack"
+	"github.com/adjust/michaelbot/auth"
+	"github.com/adjust/michaelbot/bot"
+	"github.com/adjust/michaelbot/dashboard"
+	"github.com/adjust/michaelbot/deploy"
+	"github.com/adjust/michaelbot/server"
+	"github.com/adjust/michaelbot/slack"
 )
 
 const (
@@ -52,7 +52,7 @@ func init() {
 func printVersion() {
 	fmt.Printf("%s v%s (rev %s)\n", binPath, version, buildRev)
 	fmt.Printf("Built with %s on %s by %s\n\n", buildGoVersion, buildDate, builder)
-	fmt.Println("Found a bug? Got an idea? Open an issue on https://github.com/andrewslotin/michael\nContributions are welcome!")
+	fmt.Println("Found a bug? Got an idea? Open an issue on https://github.com/adjust/michaelbot\nContributions are welcome!")
 	os.Exit(0)
 }
 

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andrewslotin/michael/dashboard/formatters"
-	"github.com/andrewslotin/michael/deploy"
+	"github.com/adjust/michaelbot/dashboard/formatters"
+	"github.com/adjust/michaelbot/deploy"
 )
 
 type Dashboard struct {

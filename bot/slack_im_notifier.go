@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/andrewslotin/michael/deploy"
-	"github.com/andrewslotin/michael/slack"
+	"github.com/adjust/michaelbot/deploy"
+	"github.com/adjust/michaelbot/slack"
 )
 
 type SlackIMNotifier struct {

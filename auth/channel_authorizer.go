@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/andrewslotin/michael/dashboard"
+	"github.com/adjust/michaelbot/dashboard"
 )
 
 type ChannelAuthorizer struct {

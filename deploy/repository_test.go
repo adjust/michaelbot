@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andrewslotin/michael/deploy"
-	"github.com/andrewslotin/michael/slack"
+	"github.com/adjust/michaelbot/deploy"
+	"github.com/adjust/michaelbot/slack"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"

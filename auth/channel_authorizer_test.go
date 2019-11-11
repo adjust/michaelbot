@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andrewslotin/michael/auth"
-	"github.com/andrewslotin/michael/auth/authtest"
+	"github.com/adjust/michaelbot/auth"
+	"github.com/adjust/michaelbot/auth/authtest"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

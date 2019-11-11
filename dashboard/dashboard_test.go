@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andrewslotin/michael/dashboard"
-	"github.com/andrewslotin/michael/deploy"
-	"github.com/andrewslotin/michael/slack"
+	"github.com/adjust/michaelbot/dashboard"
+	"github.com/adjust/michaelbot/deploy"
+	"github.com/adjust/michaelbot/slack"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
