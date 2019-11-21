@@ -30,6 +30,9 @@ func (notifier *SlackIMNotifier) DeployStarted(_ string, d deploy.Deploy) {
 	notifier.mutex.Lock()
 	defer notifier.mutex.Unlock()
 
+	// stop current timer if exist
+	notifier.stopTimer()
+
 	notifier.timer = time.AfterFunc(notifier.warningTimeout, func() {
 		message := slack.Message{
 			Text: fmt.Sprintf("Your deploy %q was started %s ago. Are you still deploying?", d.Subject, notifier.warningTimeout),
@@ -44,9 +47,7 @@ func (notifier *SlackIMNotifier) DeployStarted(_ string, d deploy.Deploy) {
 
 func (notifier *SlackIMNotifier) DeployCompleted(_ string, d deploy.Deploy) {
 	notifier.mutex.Lock()
-	if notifier.timer != nil {
-		notifier.timer.Stop()
-	}
+	notifier.stopTimer()
 	notifier.mutex.Unlock()
 
 	var (
@@ -82,8 +83,13 @@ func (notifier *SlackIMNotifier) DeployCompleted(_ string, d deploy.Deploy) {
 
 func (notifier *SlackIMNotifier) DeployAborted(_ string, _ deploy.Deploy) {
 	notifier.mutex.Lock()
+	notifier.stopTimer()
+	notifier.mutex.Unlock()
+}
+
+func (notifier *SlackIMNotifier) stopTimer() {
 	if notifier.timer != nil {
 		notifier.timer.Stop()
+		notifier.timer = nil
 	}
-	notifier.mutex.Unlock()
 }
