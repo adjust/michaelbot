@@ -6,7 +6,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/andrewslotin/michael/deploy"
+	"github.com/adjust/michaelbot/deploy"
 )
 
 var (

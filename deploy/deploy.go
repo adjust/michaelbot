@@ -3,7 +3,7 @@ package deploy
 import (
 	"time"
 
-	"github.com/andrewslotin/michael/slack"
+	"github.com/adjust/michaelbot/slack"
 )
 
 type Deploy struct {

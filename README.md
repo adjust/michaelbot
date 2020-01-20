@@ -27,7 +27,7 @@ Self-signed certificates won't work for Slack, [Letsencrypt](https://letsencrypt
 Now compile and run the server (assuming that you have `go` installed):
 
 ```
-go get github.com/andrewslotin/michael
+go get github.com/adjust/michaelbot
 SLACK_TOKEN=<token you copied before> $GOPATH/bin/michael
 ```
 
@@ -116,10 +116,10 @@ To see the history of deploys in channel run <kbd>/deploy history</kbd> in this 
 This will open a page in your browser with all deploys that were ever announced in this channel.
 
 ```
-* suddendef was deploying https://github.com/andrewslotin/michael/pull/15 since 24 Aug 16 20:54 UTC until 24 Aug 16 20:54 UTC
-* suddendef was deploying https://github.com/andrewslotin/michael/pull/15 https://github.com/andrewslotin/michael/pull/11 since 24 Aug 16 20:54 UTC until 24 Aug 16 20:55 UTC
+* suddendef was deploying https://github.com/adjust/michaelbot/pull/15 since 24 Aug 16 20:54 UTC until 24 Aug 16 20:54 UTC
+* suddendef was deploying https://github.com/adjust/michaelbot/pull/15 https://github.com/adjust/michaelbot/pull/11 since 24 Aug 16 20:54 UTC until 24 Aug 16 20:55 UTC
 * suddendef was deploying history since 25 Aug 16 08:35 UTC until 25 Aug 16 08:35 UTC
-* suddendef was deploying https://github.com/andrewslotin/michael/pull/19 since 25 Aug 16 08:35 UTC until 25 Aug 16 08:35 UTC
+* suddendef was deploying https://github.com/adjust/michaelbot/pull/19 since 25 Aug 16 08:35 UTC until 25 Aug 16 08:35 UTC
 ```
 
 #### Authorization and authentication

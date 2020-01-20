@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/andrewslotin/michael/deploy"
+	"github.com/adjust/michaelbot/deploy"
 	"github.com/stretchr/testify/suite"
 )
 

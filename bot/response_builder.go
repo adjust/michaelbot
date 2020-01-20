@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andrewslotin/michael/deploy"
-	"github.com/andrewslotin/michael/github"
-	"github.com/andrewslotin/michael/slack"
+	"github.com/adjust/michaelbot/deploy"
+	"github.com/adjust/michaelbot/github"
+	"github.com/adjust/michaelbot/slack"
 )
 
 const (

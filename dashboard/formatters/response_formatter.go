@@ -3,7 +3,7 @@ package formatters
 import (
 	"net/http"
 
-	"github.com/andrewslotin/michael/deploy"
+	"github.com/adjust/michaelbot/deploy"
 )
 
 type ResponseFormatter interface {

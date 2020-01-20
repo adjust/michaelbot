@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/andrewslotin/michael/dashboard"
+	"github.com/adjust/michaelbot/dashboard"
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
