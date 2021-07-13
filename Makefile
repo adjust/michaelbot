@@ -1,7 +1,7 @@
 PROJECT := michael
 SOURCES := $(shell find . -name '*.go')
 
-VERSION := 1.1.5
+VERSION := 1.1.6
 GIT_REVISION := $$(git rev-parse HEAD | cut -c -6)
 GOVERSION := $(shell go version)
 BUILDDATE := $(shell date -u +"%B %d, %Y")

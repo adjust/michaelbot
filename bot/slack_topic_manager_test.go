@@ -168,11 +168,11 @@ func setupSlackWebAPITestServer(t *testing.T) (baseURL string, channel *SlackCha
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
 
-	mux.HandleFunc("/channels.info", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/conversations.info", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `{"ok":true,"channel":{"topic":{"value":"%s"}}}`, channel.Topic)
 	})
 
-	mux.HandleFunc("/channels.setTopic", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/conversations.setTopic", func(w http.ResponseWriter, r *http.Request) {
 		if token := r.FormValue("token"); !assert.Equal(t, webAPIToken, token) {
 			fmt.Fprintf(w, `{"ok":false,"error":"wrong token %q"}`, token)
 			return

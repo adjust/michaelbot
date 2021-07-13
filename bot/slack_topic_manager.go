@@ -53,5 +53,5 @@ func (mgr *SlackTopicManager) channelTopicReplace(channelID, old, new string) er
 		return nil
 	}
 
-	return mgr.api.SetChannelTopic(channelID, newTopic)
+	return mgr.api.SetConversationTopic(channelID, newTopic)
 }

@@ -1,5 +1,5 @@
 FROM alpine:3.3
-MAINTAINER Andrew Slotin <andrew.slotin@gmail.com>
+MAINTAINER Bubunyo Nyavor <samuel.bubunyo.nyavor@adjust.com>
 
 RUN apk add -U ca-certificates
 

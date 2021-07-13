@@ -40,8 +40,8 @@ func NewWebAPI(token string, httpClient *http.Client) *WebAPI {
 	return api
 }
 
-func (api *WebAPI) SetChannelTopic(channelID, topic string) error {
-	const method = "channels.setTopic"
+func (api *WebAPI) SetConversationTopic(channelID, topic string) error {
+	const method = "conversations.setTopic"
 
 	params := url.Values{}
 	params.Add("channel", channelID)
@@ -52,7 +52,7 @@ func (api *WebAPI) SetChannelTopic(channelID, topic string) error {
 }
 
 func (api *WebAPI) GetChannelTopic(channelID string) (string, error) {
-	const method = "channels.info"
+	const method = "conversations.info"
 
 	params := url.Values{}
 	params.Add("channel", channelID)
