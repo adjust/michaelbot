@@ -1,0 +1,23 @@
+# github.com/boltdb/bolt v1.2.2-0.20160707165650-acc803f0ced1
+## explicit
+github.com/boltdb/bolt
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
+# github.com/dgrijalva/jwt-go v3.0.1-0.20160729164851-63734eae1ef5+incompatible
+## explicit
+github.com/dgrijalva/jwt-go
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
+# github.com/stretchr/objx v0.3.0
+## explicit
+github.com/stretchr/objx
+# github.com/stretchr/testify v1.3.0
+## explicit
+github.com/stretchr/testify/assert
+github.com/stretchr/testify/mock
+github.com/stretchr/testify/require
+github.com/stretchr/testify/suite
+# golang.org/x/sys v0.0.0-20210330210617-4fbd30eecc44
+## explicit
+golang.org/x/sys/internal/unsafeheader
+golang.org/x/sys/unix

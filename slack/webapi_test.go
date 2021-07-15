@@ -119,7 +119,7 @@ func TestWebAPI_ChannelsSetTopic(t *testing.T) {
 	defer teardown()
 
 	var requestNum int
-	mux.HandleFunc("/channels.setTopic", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/conversations.setTopic", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "CHANNELID1", r.FormValue("channel"))
 		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
 		assert.Equal(t, "Example topic", r.FormValue("topic"))
@@ -131,7 +131,7 @@ func TestWebAPI_ChannelsSetTopic(t *testing.T) {
 	api := slack.NewWebAPI("xxxx-token-12345", nil)
 	api.BaseURL = baseURL
 
-	require.NoError(t, api.SetChannelTopic("CHANNELID1", "Example topic"))
+	require.NoError(t, api.SetConversationTopic("CHANNELID1", "Example topic"))
 	require.Equal(t, 1, requestNum)
 }
 
@@ -140,7 +140,7 @@ func TestWebAPI_ChannelsSetTopic_ErrorHandling(t *testing.T) {
 	defer teardown()
 
 	var requestNum int
-	mux.HandleFunc("/channels.setTopic", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/conversations.setTopic", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "CHANNELID1", r.FormValue("channel"))
 		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
 		assert.Equal(t, "Example topic", r.FormValue("topic"))
@@ -152,7 +152,7 @@ func TestWebAPI_ChannelsSetTopic_ErrorHandling(t *testing.T) {
 	api := slack.NewWebAPI("xxxx-token-12345", nil)
 	api.BaseURL = baseURL
 
-	err := api.SetChannelTopic("CHANNELID1", "Example topic")
+	err := api.SetConversationTopic("CHANNELID1", "Example topic")
 	require.Equal(t, 1, requestNum)
 	assert.Error(t, err)
 }
@@ -162,7 +162,7 @@ func TestWebAPI_ChannelsGetTopic(t *testing.T) {
 	defer teardown()
 
 	var requestNum int
-	mux.HandleFunc("/channels.info", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/conversations.info", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "CHANNELID1", r.FormValue("channel"))
 		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
 
@@ -185,7 +185,7 @@ func TestWebAPI_ChannelsGetTopic_ErrorHandling(t *testing.T) {
 	defer teardown()
 
 	var requestNum int
-	mux.HandleFunc("/channels.info", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/conversations.info", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "CHANNELID1", r.FormValue("channel"))
 		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
 
