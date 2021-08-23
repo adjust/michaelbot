@@ -120,6 +120,13 @@ func main() {
 	slackBot.SetDashboardAuth(authenticator)
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("/health", func(w http.ResponseWriter, req *http.Request) {
+		if req.Method != "GET" {
+			http.NotFound(w, req)
+			return
+		}
+		fmt.Fprintf(w, "Michaelbot is running!")
+	})
 	mux.Handle("/deploy", slackBot)
 	mux.Handle("/", auth.TokenAuthenticationMiddleware(auth.ChannelAuthorizerMiddleware(deployDashboard, []byte(authSecret)), authenticator, []byte(authSecret)))
 
