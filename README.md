@@ -14,7 +14,7 @@ First you need to add a new slash command for your team:
 
 1. Go to [Custom Integrations](https://api.slack.com/custom-integrations) and click on "New Command"
 2. In the "Command" field type in <kbd>/deploy</kbd> — this will be your new Slack command to start, finish and list deploys in channel
-3. Fill in "URL" field with an URL where `michael` is deployed
+3. Fill in "URL" field with an URL where `michael` is deployed, for eg. `https://deploybot-home.com/deploy`
 4. Set "Method" to `POST`
 5. Copy the content of "Token" field, this will be needed to authenticate incoming requests
 
@@ -33,9 +33,17 @@ SLACK_TOKEN=<token you copied before> $GOPATH/bin/michael
 
 This will run a server listening on `0.0.0.0:8081`. Check `$GOPATH/bin/michael --help` to see available options.
 
+### other environment variables
+
+`GITHUB_TOKEN`
+
 Optionally you may provide your [GitHub personal access token](https://github.com/settings/tokens) with `repo` permissions by
 setting `GITHUB_TOKEN` environment variable. This token is used to get PR details (title, description and author) and attach them to an announcement.
 If no token is provided only public pull requests will be have detailed information, and others will only contain a link to GitHub.
+
+`SLACK_WEBAPI_TOKEN`
+
+Optionally you may provide a slack webapi token so that deploy bot can post notifications in Slack
 
 Usage
 -----
