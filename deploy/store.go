@@ -1,6 +1,7 @@
 package deploy
 
 type Store interface {
-	Get(key string) (d Deploy, ok bool)
-	Set(key string, d Deploy)
+	GetQueue(key string) Queue
+	SetQueue(key string, q Queue)
+	AddToHistory(key string, d Deploy)
 }

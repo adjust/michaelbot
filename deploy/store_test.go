@@ -22,15 +22,12 @@ func (suite *StoreSuite) TestGetSet() {
 	}
 	require.NoError(suite.T(), err)
 
-	_, ok := store.Get("key1")
-	assert.False(suite.T(), ok)
-
 	// Store a value
-	channel1Deploy := deploy.Deploy{
+	channelDeploy := deploy.Deploy{
 		User:        slack.User{ID: "1", Name: "Test User"},
 		Subject:     "Deploy subject a/b#1 and c/d#2 for @user1 and @user2",
-		StartedAt:   time.Now().Add(-5 * time.Minute),
-		FinishedAt:  time.Now().Add(-1 * time.Minute),
+		StartedAt:   time.Now().Round(0).Add(-5 * time.Minute),
+		FinishedAt:  time.Now().Round(0).Add(-1 * time.Minute),
 		Aborted:     true,
 		AbortReason: "something went wrong",
 		PullRequests: []deploy.PullRequestReference{
@@ -42,73 +39,13 @@ func (suite *StoreSuite) TestGetSet() {
 			{Name: "user2"},
 		},
 	}
-	store.Set("key1", channel1Deploy)
-	if d, ok := store.Get("key1"); assert.True(suite.T(), ok) {
-		assert.Equal(suite.T(), d.User, channel1Deploy.User)
-		assert.Equal(suite.T(), d.Subject, channel1Deploy.Subject)
-		assert.WithinDuration(suite.T(), d.StartedAt, channel1Deploy.StartedAt, time.Second)
-		assert.WithinDuration(suite.T(), d.FinishedAt, channel1Deploy.FinishedAt, time.Second)
-		assert.Equal(suite.T(), channel1Deploy.PullRequests, d.PullRequests)
-		assert.Equal(suite.T(), channel1Deploy.Subscribers, d.Subscribers)
-	}
 
-	// Populate another key
-	channel2Deploy := deploy.Deploy{
-		User:      slack.User{ID: "2", Name: "Second User"},
-		Subject:   "Another deploy c/d#2 for @another_user",
-		StartedAt: time.Now().Add(-4 * time.Minute),
-		PullRequests: []deploy.PullRequestReference{
-			{ID: "2", Repository: "c/d"},
-		},
-		Subscribers: []deploy.UserReference{
-			{Name: "another_user"},
-		},
-	}
-	store.Set("key2", channel2Deploy)
-	if d, ok := store.Get("key2"); assert.True(suite.T(), ok) {
-		assert.Equal(suite.T(), d.User, channel2Deploy.User)
-		assert.Equal(suite.T(), d.Subject, channel2Deploy.Subject)
-		assert.WithinDuration(suite.T(), d.StartedAt, channel2Deploy.StartedAt, time.Second)
-		assert.WithinDuration(suite.T(), d.FinishedAt, channel2Deploy.FinishedAt, time.Second)
-		assert.Equal(suite.T(), channel2Deploy.PullRequests, d.PullRequests)
-		assert.Equal(suite.T(), channel2Deploy.Subscribers, d.Subscribers)
-	}
+	queue := deploy.NewEmptyQueue()
+	queue.Add(channelDeploy)
 
-	// Check that another record wasn't changed
-	if d, ok := store.Get("key1"); assert.True(suite.T(), ok) {
-		assert.Equal(suite.T(), d.User, channel1Deploy.User)
-		assert.Equal(suite.T(), d.Subject, channel1Deploy.Subject)
-		assert.WithinDuration(suite.T(), d.StartedAt, channel1Deploy.StartedAt, time.Second)
-		assert.WithinDuration(suite.T(), d.FinishedAt, channel1Deploy.FinishedAt, time.Second)
-		assert.Equal(suite.T(), channel1Deploy.PullRequests, d.PullRequests)
-		assert.Equal(suite.T(), channel1Deploy.Subscribers, d.Subscribers)
-	}
-}
+	store.SetQueue("key1", queue)
 
-func (suite *StoreSuite) TestSet_Update() {
-	store, teardown, err := suite.Setup()
-	if teardown != nil {
-		defer teardown()
-	}
-	require.NoError(suite.T(), err)
+	q := store.GetQueue("key1")
 
-	channel1Deploy := deploy.New(slack.User{ID: "1", Name: "First User"}, "Deploy subject")
-	channel1Deploy.Start()
-	store.Set("key1", channel1Deploy)
-
-	d, ok := store.Get("key1")
-	require.True(suite.T(), ok)
-
-	d.Subject = "Updated subject"
-	d.User = slack.User{ID: "2", Name: "Updated User"}
-	store.Set("key1", d)
-
-	if updated, ok := store.Get("key1"); assert.True(suite.T(), ok) {
-		assert.Equal(suite.T(), d.User, updated.User)
-		assert.Equal(suite.T(), d.Subject, updated.Subject)
-		assert.WithinDuration(suite.T(), d.StartedAt, updated.StartedAt, time.Second)
-		assert.WithinDuration(suite.T(), d.FinishedAt, updated.FinishedAt, time.Second)
-		assert.Equal(suite.T(), updated.PullRequests, d.PullRequests)
-		assert.Equal(suite.T(), updated.Subscribers, d.Subscribers)
-	}
+	assert.Equal(suite.T(), queue, q)
 }

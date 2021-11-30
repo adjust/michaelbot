@@ -1,12 +1,12 @@
 package deploy
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
 
-	"github.com/adjust/michaelbot/slack"
 	"github.com/boltdb/bolt"
 )
 
@@ -38,75 +38,112 @@ func NewBoltDBStore(path string) (*BoltDBStore, error) {
 	return &BoltDBStore{db: db}, nil
 }
 
-func (s *BoltDBStore) Get(key string) (deploy Deploy, ok bool) {
+func (s *BoltDBStore) GetQueue(key string) (queue Queue) {
+	ok := false
+
 	s.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(key))
-		if b == nil {
+		bucket := tx.Bucket([]byte(key))
+
+		if bucket == nil {
 			return nil
 		}
 
-		lastDeployKey, _ := b.Cursor().Last()
-		if lastDeployKey == nil {
-			ok = false
+		bytes := bucket.Get([]byte("queue"))
+
+		if bytes == nil {
 			return nil
 		}
 
-		var err error
-		if deploy, err = s.readDeploy(lastDeployKey, b); err != nil {
-			if err == ErrNoDeploy {
-				ok = false
-				return nil
-			}
+		err := json.Unmarshal(bytes, &queue)
 
-			return err
-		}
-
-		ok = true
+		ok = err == nil
 
 		return nil
 	})
 
-	return deploy, ok
+	if !ok {
+		queue = NewEmptyQueue()
+	}
+
+	return queue
 }
 
-func (s *BoltDBStore) Set(key string, d Deploy) {
+func (s *BoltDBStore) SetQueue(key string, queue Queue) {
 	s.db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte(key))
+		bucket, err := tx.CreateBucketIfNotExists([]byte(key))
+
 		if err != nil {
-			return fmt.Errorf("failed to store deploy of %s by %s in channel %s: %s", d.Subject, d.User.Name, key, err)
+			return fmt.Errorf("failed to store queue %#v in channel %s: %s", queue, key, err)
 		}
 
-		s.writeDeploy(d, b)
+		bytes, err := json.Marshal(queue)
+
+		if err != nil {
+			return fmt.Errorf("failed to marshal queue %#v: %s", queue, err)
+		}
+
+		bucket.Put([]byte("queue"), bytes)
+
+		return nil
+	})
+}
+
+func (s *BoltDBStore) AddToHistory(key string, deploy Deploy) {
+	s.db.Update(func(tx *bolt.Tx) error {
+		bucket, err := tx.CreateBucketIfNotExists([]byte(key))
+
+		if err != nil {
+			return fmt.Errorf("failed to create bucket for channel %s: %s", key, err)
+		}
+
+		bucket, err = bucket.CreateBucketIfNotExists([]byte("history"))
+
+		if err != nil {
+			return fmt.Errorf("failed to create bucket for channel history %s: %s", key, err)
+		}
+
+		bytes, err := json.Marshal(deploy)
+
+		if err != nil {
+			return fmt.Errorf("failed to marshal deploy %#v: %s", deploy, err)
+		}
+
+		id, _ := bucket.NextSequence()
+
+		bucket.Put(itob(id), bytes)
 
 		return nil
 	})
 }
 
 func (s *BoltDBStore) All(key string) []Deploy {
+	var deploy Deploy
 	var deploys []Deploy
 
 	s.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(key))
-		if b == nil {
+		bucket := tx.Bucket([]byte(key))
+
+		if bucket == nil {
 			return nil
 		}
 
-		stats := b.Stats()
-		deploys = make([]Deploy, 0, stats.BucketN-1)
+		bucket = bucket.Bucket([]byte("history"))
 
-		cur := b.Cursor()
-		for k, v := cur.First(); k != nil; k, v = cur.Next() {
-			if v != nil {
-				continue
-			}
-
-			d, err := s.readDeploy(k, b)
-			if err != nil {
-				return err
-			}
-
-			deploys = append(deploys, d)
+		if bucket == nil {
+			return nil
 		}
+
+		bucket.ForEach(func(k, v []byte) error {
+			err := json.Unmarshal(v, &deploy)
+
+			if err != nil {
+				return nil
+			}
+
+			deploys = append(deploys, deploy)
+
+			return nil
+		})
 
 		return nil
 	})
@@ -115,26 +152,32 @@ func (s *BoltDBStore) All(key string) []Deploy {
 }
 
 func (s *BoltDBStore) Since(key string, startTime time.Time) []Deploy {
+	var deploy Deploy
 	var deploys []Deploy
 
 	s.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(key))
-		if b == nil {
+		bucket := tx.Bucket([]byte(key))
+
+		if bucket == nil {
 			return nil
 		}
 
-		cur := b.Cursor()
-		for k, v := cur.Seek([]byte(s.deployKeyTimestamp(startTime) + "-")); k != nil; k, v = cur.Next() {
-			if v != nil {
-				continue
-			}
+		bucket = bucket.Bucket([]byte("history"))
 
-			d, err := s.readDeploy(k, b)
+		if bucket == nil {
+			return nil
+		}
+
+		cursor := bucket.Cursor()
+		for k, v := cursor.First(); k != nil; k, v = cursor.Next() {
+			err := json.Unmarshal(v, &deploy)
 			if err != nil {
 				return err
 			}
 
-			deploys = append(deploys, d)
+			if deploy.StartedAt.After(startTime) {
+				deploys = append(deploys, deploy)
+			}
 		}
 
 		return nil
@@ -143,96 +186,8 @@ func (s *BoltDBStore) Since(key string, startTime time.Time) []Deploy {
 	return deploys
 }
 
-func (s *BoltDBStore) deployKey(deploy Deploy) []byte {
-	return []byte(s.deployKeyTimestamp(deploy.StartedAt) + "-" + deploy.User.ID)
-}
-
-func (*BoltDBStore) deployKeyTimestamp(t time.Time) string {
-	return t.UTC().Format(time.RFC3339)
-}
-
-func (s *BoltDBStore) writeDeploy(deploy Deploy, channelBucket *bolt.Bucket) error {
-	b, err := channelBucket.CreateBucketIfNotExists(s.deployKey(deploy))
-	if err != nil {
-		return fmt.Errorf("failed to store deploy from %s by %s: %s", deploy.StartedAt.Format(time.RFC3339), deploy.User.Name, err)
-	}
-
-	b.Put([]byte(subjectKey), []byte(deploy.Subject))
-	b.Put([]byte(userIDKey), []byte(deploy.User.ID))
-	b.Put([]byte(userNameKey), []byte(deploy.User.Name))
-	b.Put([]byte(startedAtKey), []byte(deploy.StartedAt.Format(time.RFC3339Nano)))
-
-	if !deploy.FinishedAt.IsZero() {
-		b.Put([]byte(finishedAtKey), []byte(deploy.FinishedAt.Format(time.RFC3339Nano)))
-
-		if deploy.Aborted {
-			b.Put([]byte(abortedKey), []byte(deploy.AbortReason))
-		}
-	}
-
-	if len(deploy.PullRequests) != 0 {
-		data, err := json.Marshal(deploy.PullRequests)
-		if err != nil {
-			return err
-		}
-
-		b.Put([]byte(pullRequestsKey), data)
-	}
-
-	if len(deploy.Subscribers) != 0 {
-		data, err := json.Marshal(deploy.Subscribers)
-		if err != nil {
-			return err
-		}
-
-		b.Put([]byte(subscribersKey), data)
-	}
-
-	return nil
-}
-
-func (*BoltDBStore) readDeploy(key []byte, channelBucket *bolt.Bucket) (deploy Deploy, err error) {
-	b := channelBucket.Bucket(key)
-	if b == nil {
-		return deploy, ErrNoDeploy
-	}
-
-	deploy.User = slack.User{
-		ID:   string(b.Get([]byte(userIDKey))),
-		Name: string(b.Get([]byte(userNameKey))),
-	}
-	deploy.Subject = string(b.Get([]byte(subjectKey)))
-
-	if startedAt, err := time.Parse(time.RFC3339Nano, string(b.Get([]byte(startedAtKey)))); err != nil {
-		return deploy, fmt.Errorf("malformed started_at time for deploy of %s by %s: %s", deploy.Subject, deploy.User.Name, err)
-	} else {
-		deploy.StartedAt = startedAt
-	}
-
-	if value := b.Get([]byte(finishedAtKey)); value != nil {
-		if finishedAt, err := time.Parse(time.RFC3339Nano, string(value)); err != nil {
-			return deploy, fmt.Errorf("malformed finished_at time for deploy of %s by %s: %s", deploy.Subject, deploy.User.Name, err)
-		} else {
-			deploy.FinishedAt = finishedAt
-		}
-	}
-
-	if value := b.Get([]byte(abortedKey)); value != nil {
-		deploy.Aborted = true
-		deploy.AbortReason = string(value)
-	}
-
-	if value := b.Get([]byte(pullRequestsKey)); value != nil {
-		if err := json.Unmarshal(value, &deploy.PullRequests); err != nil {
-			return deploy, fmt.Errorf("malformed prs for deploy of %s by %s: %s", deploy.Subject, deploy.User.Name, err)
-		}
-	}
-
-	if value := b.Get([]byte(subscribersKey)); value != nil {
-		if err := json.Unmarshal(value, &deploy.Subscribers); err != nil {
-			return deploy, fmt.Errorf("malformed users for deploy of %s by %s: %s", deploy.Subject, deploy.User.Name, err)
-		}
-	}
-
-	return deploy, nil
+func itob(v uint64) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, v)
+	return b
 }

@@ -47,9 +47,10 @@ func TestResponseBuilder_DeployStatusMessage(t *testing.T) {
 		Subject:   "deploy subject",
 		StartedAt: time.Now(),
 	}
+	ds := []deploy.Deploy{d}
 
 	b := bot.NewResponseBuilder(github.NewClient("", nil))
-	response := b.DeployStatusMessage(d)
+	response := b.DeployStatusMessage(ds)
 
 	assert.Equal(t, slack.ResponseTypeEphemeral, response.ResponseType)
 	assert.Contains(t, response.Text, d.User.String())

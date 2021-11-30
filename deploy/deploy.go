@@ -6,6 +6,53 @@ import (
 	"github.com/adjust/michaelbot/slack"
 )
 
+type Queue struct {
+	Items []Deploy
+}
+
+func NewEmptyQueue() Queue {
+	return Queue{make([]Deploy, 0)}
+}
+
+func (q *Queue) Add(d Deploy) {
+	q.Items = append(q.Items, d)
+}
+
+func (q *Queue) Current() (d Deploy, ok bool) {
+	if len(q.Items) > 0 {
+		return q.Items[0], true
+	} else {
+		return Deploy{}, false
+	}
+}
+
+func (q *Queue) Pop() (d Deploy, ok bool) {
+	if len(q.Items) > 0 {
+		ok = true
+		d = q.Items[0]
+		q.Items = q.Items[1:len(q.Items)]
+	} else {
+		ok = false
+		d = Deploy{}
+	}
+
+	return d, ok
+}
+
+func (q *Queue) IsUserInQueue(u slack.User) bool {
+	for _, d := range q.Items {
+		if d.User.ID == u.ID {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (q *Queue) ReplaceHeadWith(d Deploy) {
+	q.Items[0] = d
+}
+
 type Deploy struct {
 	User         slack.User
 	Subject      string

@@ -79,13 +79,14 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case subject == "help" || subject == "":
 		sendImmediateResponse(w, b.responses.HelpMessage())
 	case subject == "status":
-		d, ok := b.deploys.Current(channelID)
-		if !ok {
+		deploys := b.deploys.All(channelID)
+
+		if len(deploys) == 0 {
 			sendImmediateResponse(w, b.responses.NoRunningDeploysMessage())
 			return
 		}
 
-		sendImmediateResponse(w, b.responses.DeployStatusMessage(d))
+		sendImmediateResponse(w, b.responses.DeployStatusMessage(deploys))
 	case subject == "done":
 		d, ok := b.deploys.Finish(channelID)
 		if !ok {
@@ -128,9 +129,12 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		sendImmediateResponse(w, b.responses.DeployHistoryLink(r.Host, channelID, dashboardToken))
 	default:
-		d, ok := b.deploys.Start(channelID, deploy.New(user, slack.EscapeMessage(subject)))
-		if !ok {
+		d, err := b.deploys.Start(channelID, deploy.New(user, slack.EscapeMessage(subject)))
+		if errors.Is(err, deploy.DeployInProgressError) {
 			sendImmediateResponse(w, b.responses.DeployInProgressMessage(d))
+			return
+		} else if errors.Is(err, deploy.AlreadyInQueueError) {
+			sendImmediateResponse(w, b.responses.UserIsInQeueueMessage(d.User))
 			return
 		}
 
