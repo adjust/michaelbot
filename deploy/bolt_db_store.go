@@ -82,7 +82,11 @@ func (s *BoltDBStore) SetQueue(key string, queue Queue) {
 			return fmt.Errorf("failed to marshal queue %#v: %s", queue, err)
 		}
 
-		bucket.Put([]byte("queue"), bytes)
+		err = bucket.Put([]byte("queue"), bytes)
+
+		if err != nil {
+			return fmt.Errorf("failed to put queue into a bucket %#v: %s", queue, err)
+		}
 
 		return nil
 	})
@@ -110,7 +114,11 @@ func (s *BoltDBStore) AddToHistory(key string, deploy Deploy) {
 
 		id, _ := bucket.NextSequence()
 
-		bucket.Put(itob(id), bytes)
+		err = bucket.Put(itob(id), bytes)
+
+		if err != nil {
+			return fmt.Errorf("failed to put deploy into a bucket %#v: %s", deploy, err)
+		}
 
 		return nil
 	})

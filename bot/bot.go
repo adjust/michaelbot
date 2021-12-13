@@ -136,6 +136,10 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else if errors.Is(err, deploy.AlreadyInQueueError) {
 			sendImmediateResponse(w, b.responses.UserIsInQeueueMessage(d.User))
 			return
+		} else if err != nil {
+			log.Printf("failed to start a deploy: (%s)", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
 		}
 
 		w.Write(nil)
