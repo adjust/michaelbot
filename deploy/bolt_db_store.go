@@ -112,6 +112,8 @@ func (s *BoltDBStore) AddToHistory(key string, deploy Deploy) {
 			return fmt.Errorf("failed to marshal deploy %#v: %s", deploy, err)
 		}
 
+		// This returns an error only if the Tx is closed or not writeable.
+		// That can't happen in an Update() call so we can ignore the error check.
 		id, _ := bucket.NextSequence()
 
 		err = bucket.Put(itob(id), bytes)
