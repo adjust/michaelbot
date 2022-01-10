@@ -2,6 +2,8 @@ package deploy
 
 import (
 	"errors"
+
+	"github.com/adjust/michaelbot/slack"
 )
 
 var (
@@ -88,4 +90,16 @@ func (repo *ChannelDeploys) Abort(channelID, reason string) (Deploy, bool) {
 	repo.store.SetQueue(channelID, queue)
 
 	return current, true
+}
+
+func (repo *ChannelDeploys) LeaveQueue(channelID string, user slack.User) bool {
+	queue := repo.store.GetQueue(channelID)
+
+	userHasBeenRemoved := queue.RemoveUser(user)
+
+	if userHasBeenRemoved {
+		repo.store.SetQueue(channelID, queue)
+	}
+
+	return userHasBeenRemoved
 }

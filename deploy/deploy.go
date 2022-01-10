@@ -49,6 +49,24 @@ func (q *Queue) IsUserInQueue(u slack.User) bool {
 	return false
 }
 
+func (q *Queue) RemoveUser(u slack.User) bool {
+	if !q.IsUserInQueue(u) {
+		return false
+	}
+
+	filtered := make([]Deploy, 0)
+
+	for _, d := range q.Items {
+		if d.User.ID != u.ID {
+			filtered = append(filtered, d)
+		}
+	}
+
+	q.Items = filtered
+
+	return true
+}
+
 func (q *Queue) ReplaceHeadWith(d Deploy) {
 	q.Items[0] = d
 }

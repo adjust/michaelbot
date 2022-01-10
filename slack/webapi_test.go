@@ -315,9 +315,9 @@ func TestWebAPI_OpenIMChannel(t *testing.T) {
 	user := slack.User{ID: "123", Name: "user1"}
 
 	var requestNum int
-	mux.HandleFunc("/im.open", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/conversations.open", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
-		assert.Equal(t, user.ID, r.FormValue("user"))
+		assert.Equal(t, user.ID, r.FormValue("users"))
 
 		requestNum++
 		w.Write([]byte(`{"ok":true,"channel":{"id":"channel1"}}`))
@@ -340,9 +340,9 @@ func TestWebAPI_OpenIMChannel_ErrorHandling(t *testing.T) {
 	user := slack.User{ID: "123", Name: "user1"}
 
 	var requestNum int
-	mux.HandleFunc("/im.open", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/conversations.open", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
-		assert.Equal(t, user.ID, r.FormValue("user"))
+		assert.Equal(t, user.ID, r.FormValue("users"))
 
 		requestNum++
 		w.Write([]byte(`{"ok":false,"error":"user_not_found"`))

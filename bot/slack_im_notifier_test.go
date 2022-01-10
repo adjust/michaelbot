@@ -41,11 +41,11 @@ func TestSlackIMNotifier_DeployCompleted(t *testing.T) {
 
 		fmt.Fprint(w, `{"ok":true,"members":[{"id":"R1","name":"recipient1"},{"id":"R2","name":"recipient2"},{"id":"R3","name":"recipient3"}]}`)
 	})
-	mux.HandleFunc("/im.open", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/conversations.open", func(w http.ResponseWriter, r *http.Request) {
 		requestNum.IMOpen++
 		assert.Equal(t, webAPIToken, r.FormValue("token"))
 
-		if userID := r.FormValue("user"); assert.NotEmpty(t, userID) {
+		if userID := r.FormValue("users"); assert.NotEmpty(t, userID) {
 			fmt.Fprintf(w, `{"ok":true,"channel":{"id":"DM%s"}}`, userID)
 		} else {
 			fmt.Fprint(w, `{"ok":false,"error":"user_not_found"}`)
@@ -109,11 +109,11 @@ func TestSlackIMNotifier_DeployStart_Warning(t *testing.T) {
 		receivers  []string
 	)
 
-	mux.HandleFunc("/im.open", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/conversations.open", func(w http.ResponseWriter, r *http.Request) {
 		requestNum.IMOpen++
 		assert.Equal(t, webAPIToken, r.FormValue("token"))
 
-		if userID := r.FormValue("user"); assert.NotEmpty(t, userID) {
+		if userID := r.FormValue("users"); assert.NotEmpty(t, userID) {
 			fmt.Fprintf(w, `{"ok":true,"channel":{"id":"DM%s"}}`, userID)
 		} else {
 			fmt.Fprint(w, `{"ok":false,"error":"user_not_found"}`)
@@ -168,7 +168,7 @@ func TestSlackIMNotifier_DeployStart_CompletedBeforeWarning(t *testing.T) {
 		requestNum struct{ IMPostMessage, IMOpen int }
 	)
 
-	mux.HandleFunc("/im.open", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/conversations.open", func(w http.ResponseWriter, r *http.Request) {
 		requestNum.IMOpen++
 		fmt.Println(r)
 	})
@@ -205,7 +205,7 @@ func TestSlackIMNotifier_DeployStart_AbortBeforeWarning(t *testing.T) {
 		requestNum struct{ IMPostMessage, IMOpen int }
 	)
 
-	mux.HandleFunc("/im.open", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/conversations.open", func(w http.ResponseWriter, r *http.Request) {
 		requestNum.IMOpen++
 		fmt.Println(r)
 	})
