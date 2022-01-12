@@ -64,6 +64,14 @@ func (repo *ChannelDeploys) Finish(channelID string) (Deploy, bool) {
 
 	current.Finish()
 	repo.store.AddToHistory(channelID, current)
+
+	next, queueIsNotEmpty := queue.Current()
+
+	if queueIsNotEmpty {
+		next.Start()
+		queue.ReplaceHeadWith(next)
+	}
+
 	repo.store.SetQueue(channelID, queue)
 
 	return current, true
