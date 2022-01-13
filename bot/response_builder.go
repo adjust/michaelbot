@@ -29,7 +29,7 @@ const (
 	deployDoneMessage              = "%s done deploying"
 	deployInterruptedMessage       = "%s has finished the deploy started by %s"
 	deployAnnouncementMessage      = "%s is about to deploy %s"
-	deployHistoryLinkMessage       = "Click <https://%s/%s|here> to see deploy history in this channel"
+	deployHistoryLinkMessage       = "Click <http://%s/%s|here> to see deploy history in this channel"
 	deployAbortedMessage           = "%s has aborted the deploy"
 	deployAbortedWithReasonMessage = "%s has aborted the deploy (%s)"
 	userLeftQueueMessage           = "Your scheduled deploy has been cancelled"
