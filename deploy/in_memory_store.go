@@ -6,57 +6,66 @@ import (
 )
 
 type InMemoryStore struct {
-	mu sync.RWMutex
-	m  map[string][]Deploy
+	qmu sync.RWMutex
+	hmu sync.RWMutex
+	m   map[string]Queue
+	h   map[string][]Deploy
 }
 
 func NewInMemoryStore() *InMemoryStore {
 	return &InMemoryStore{
-		m: make(map[string][]Deploy),
+		m: make(map[string]Queue),
+		h: make(map[string][]Deploy),
 	}
 }
 
-func (s *InMemoryStore) Get(key string) (d Deploy, ok bool) {
-	s.mu.RLock()
-	history, ok := s.m[key]
-	ok = ok && len(history) > 0
-	if ok {
-		d = history[len(history)-1]
-	}
-	s.mu.RUnlock()
+func (s *InMemoryStore) GetQueue(key string) (q Queue) {
+	s.qmu.RLock()
 
-	return d, ok
+	q, ok := s.m[key]
+	if !ok {
+		q = NewEmptyQueue()
+		s.m[key] = q
+	}
+
+	s.qmu.RUnlock()
+
+	return q
 }
 
-func (s *InMemoryStore) Set(key string, d Deploy) {
-	s.mu.Lock()
-	history, ok := s.m[key]
-	if ok && len(history) > 0 && history[len(history)-1].StartedAt == d.StartedAt { // Update last deploy
-		history[len(history)-1] = d
-	} else { // Add new deploy
-		s.m[key] = append(s.m[key], d)
-	}
-	s.mu.Unlock()
+func (s *InMemoryStore) SetQueue(key string, q Queue) {
+	s.qmu.Lock()
+
+	s.m[key] = q
+
+	s.qmu.Unlock()
 }
 
 func (s *InMemoryStore) All(key string) []Deploy {
-	deploys := make([]Deploy, len(s.m[key]))
-	s.mu.RLock()
-	copy(deploys, s.m[key])
-	s.mu.RUnlock()
+	s.hmu.RLock()
+
+	deploys := make([]Deploy, len(s.h[key]))
+
+	copy(deploys, s.h[key])
+
+	s.hmu.RUnlock()
 
 	return deploys
 }
 
 func (s *InMemoryStore) Since(key string, startTime time.Time) []Deploy {
-	s.mu.RLock()
-	history, ok := s.m[key]
+	s.hmu.RLock()
+
+	history, ok := s.h[key]
+
 	if !ok {
 		return nil
 	}
-	s.mu.RUnlock()
+
+	s.hmu.RUnlock()
 
 	i := len(history)
+
 	for ; i > 0; i-- {
 		if history[i-1].StartedAt.Before(startTime) {
 			break
@@ -68,4 +77,19 @@ func (s *InMemoryStore) Since(key string, startTime time.Time) []Deploy {
 	}
 
 	return history[i:]
+}
+
+func (s *InMemoryStore) AddToHistory(key string, d Deploy) {
+	s.hmu.Lock()
+
+	h, ok := s.h[key]
+	if !ok {
+		h = make([]Deploy, 0)
+	}
+
+	h = append(h, d)
+
+	s.h[key] = h
+
+	s.hmu.Unlock()
 }

@@ -121,10 +121,10 @@ func (api *WebAPI) PostMessage(channelID string, message Message) error {
 }
 
 func (api *WebAPI) OpenIMChannel(user User) (string, error) {
-	const method = "im.open"
+	const method = "conversations.open"
 
 	params := url.Values{}
-	params.Set("user", user.ID)
+	params.Set("users", user.ID)
 
 	resp, requestURL, err := api.Call(method, params)
 	if err != nil {

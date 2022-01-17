@@ -16,6 +16,6 @@ func TestInMemoryStore_AsStore(t *testing.T) {
 func TestInMemoryStore_AsRepository(t *testing.T) {
 	suite.Run(t, &RepositorySuite{Setup: func() (repo deploy.Repository, setFn func(string, deploy.Deploy), teardownFn func(), err error) {
 		r := deploy.NewInMemoryStore()
-		return r, r.Set, nil, nil
+		return r, r.AddToHistory, nil, nil
 	}})
 }

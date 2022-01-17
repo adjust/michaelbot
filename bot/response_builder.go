@@ -22,14 +22,18 @@ const (
 /deploy history — get a link to history of deploys in this channel`
 	errorMessage                   = "`%s` returned an error %s"
 	noRunningDeploysMessage        = "No one is deploying at the moment"
-	deployStatusMessage            = "%s is deploying %s since %s"
-	deployConflictMessage          = "%s is deploying since %s. You can type `/deploy done` if you think this deploy is finished."
+	singleDeployStatusMessage      = "%s is deploying %s since %s. There are no other deploys scheduled yet."
+	deployQueueStatusMessage       = "%s is deploying %s since %s. The queue:\n %s"
+	alreadyInQueueMessage          = "%s is already in queue"
+	deployConflictMessage          = "%s is deploying since %s, your PR has been added to the queue. You can type `/deploy done` if you think the current deploy is finished or type `/deploy status` to print the queue."
 	deployDoneMessage              = "%s done deploying"
 	deployInterruptedMessage       = "%s has finished the deploy started by %s"
 	deployAnnouncementMessage      = "%s is about to deploy %s"
-	deployHistoryLinkMessage       = "Click <https://%s/%s|here> to see deploy history in this channel"
+	deployHistoryLinkMessage       = "Click <http://%s/%s|here> to see deploy history in this channel"
 	deployAbortedMessage           = "%s has aborted the deploy"
 	deployAbortedWithReasonMessage = "%s has aborted the deploy (%s)"
+	userLeftQueueMessage           = "Your scheduled deploy has been cancelled"
+	userIsNotInQueueMessage        = "You are not in the queue"
 )
 
 type ResponseBuilder struct {
@@ -52,12 +56,40 @@ func (b *ResponseBuilder) NoRunningDeploysMessage() *slack.Response {
 	return newUserMessage(slack.EscapeMessage(noRunningDeploysMessage))
 }
 
-func (b *ResponseBuilder) DeployStatusMessage(d deploy.Deploy) *slack.Response {
-	return newUserMessage(fmt.Sprintf(deployStatusMessage, d.User, slack.EscapeMessage(d.Subject), d.StartedAt.Format(time.RFC822)))
+func (b *ResponseBuilder) UserLeftTheQueueMessage() *slack.Response {
+	return newUserMessage(slack.EscapeMessage(userLeftQueueMessage))
+}
+
+func (b *ResponseBuilder) NotInTheQueueMessage() *slack.Response {
+	return newUserMessage(slack.EscapeMessage(userIsNotInQueueMessage))
+}
+
+func (b *ResponseBuilder) DeployStatusMessage(deploys []deploy.Deploy) *slack.Response {
+	if len(deploys) == 1 {
+		d := deploys[0]
+
+		return newUserMessage(fmt.Sprintf(singleDeployStatusMessage, d.User, slack.EscapeMessage(d.Subject), d.StartedAt.Format(time.RFC822)))
+	} else {
+		current := deploys[0]
+		rest := deploys[1:]
+		users := make([]string, len(rest))
+
+		for i, d := range rest {
+			users[i] = fmt.Sprintf("%d. %s [%s]", i+1, d.User, d.Subject)
+		}
+
+		return newUserMessage(
+			fmt.Sprintf(deployQueueStatusMessage, current.User, slack.EscapeMessage(current.Subject), current.StartedAt.Format(time.RFC822), strings.Join(users, "\n")),
+		)
+	}
 }
 
 func (b *ResponseBuilder) DeployInProgressMessage(d deploy.Deploy) *slack.Response {
 	return newUserMessage(fmt.Sprintf(deployConflictMessage, d.User, d.StartedAt.Format(time.RFC822)))
+}
+
+func (b *ResponseBuilder) UserIsInQeueueMessage(u slack.User) *slack.Response {
+	return newUserMessage(fmt.Sprintf(alreadyInQueueMessage, u))
 }
 
 func (b *ResponseBuilder) DeployInterruptedAnnouncement(d deploy.Deploy, user slack.User) *slack.Response {

@@ -41,7 +41,7 @@ func TestBoltDBStore_AsRepository(t *testing.T) {
 			return nil, nil, teardownFn, err
 		}
 
-		return r, r.Set, teardownFn, nil
+		return r, r.AddToHistory, teardownFn, nil
 	}})
 }
 
