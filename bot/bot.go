@@ -104,6 +104,10 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		nextDeploy, nextDeployStarted := b.deploys.Current(channelID)
 		if nextDeployStarted {
 			go sendDelayedResponse(w, r, b.responses.DeployAnnouncement(nextDeploy))
+
+			for _, h := range b.deployEventHandlers {
+				go h.DeployStarted(channelID, d)
+			}
 		} else {
 			for _, h := range b.deployEventHandlers {
 				go h.DeployCompleted(channelID, d)
