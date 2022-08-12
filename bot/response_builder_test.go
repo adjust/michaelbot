@@ -169,7 +169,7 @@ func TestResponseBuilder_DeployHistoryLink_WithAuthToken(t *testing.T) {
 	response := b.DeployHistoryLink("www.example.com:8080", "abc 123", "secret token")
 
 	assert.Equal(t, slack.ResponseTypeEphemeral, response.ResponseType)
-	assert.Contains(t, response.Text, "https://www.example.com:8080/abc%20123?token=secret+token")
+	assert.Contains(t, response.Text, "http://www.example.com:8080/abc%20123?token=secret+token")
 }
 
 func TestResponseBuilder_DeployHistoryLink_EmptyAuthToken(t *testing.T) {
@@ -177,7 +177,7 @@ func TestResponseBuilder_DeployHistoryLink_EmptyAuthToken(t *testing.T) {
 	response := b.DeployHistoryLink("www.example.com:8080", "abc 123", "")
 
 	assert.Equal(t, slack.ResponseTypeEphemeral, response.ResponseType)
-	assert.Contains(t, response.Text, "https://www.example.com:8080/abc%20123")
+	assert.Contains(t, response.Text, "http://www.example.com:8080/abc%20123")
 }
 
 func TestResponseBuilder_DeployHistoryLink_StandardPorts(t *testing.T) {
@@ -187,7 +187,7 @@ func TestResponseBuilder_DeployHistoryLink_StandardPorts(t *testing.T) {
 
 	for _, port := range standardPorts {
 		response := b.DeployHistoryLink("www.example.com:"+port, "abc 123", "")
-		assert.Contains(t, response.Text, "https://www.example.com/abc%20123", "port: %s", port)
+		assert.Contains(t, response.Text, "http://www.example.com/abc%20123", "port: %s", port)
 	}
 }
 

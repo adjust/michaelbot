@@ -26,8 +26,8 @@ func (suite *StoreSuite) TestGetSet() {
 	channelDeploy := deploy.Deploy{
 		User:        slack.User{ID: "1", Name: "Test User"},
 		Subject:     "Deploy subject a/b#1 and c/d#2 for @user1 and @user2",
-		StartedAt:   time.Now().Round(0).Add(-5 * time.Minute),
-		FinishedAt:  time.Now().Round(0).Add(-1 * time.Minute),
+		StartedAt:   time.Now().Round(0).Add(-5 * time.Minute).UTC(),
+		FinishedAt:  time.Now().Round(0).Add(-1 * time.Minute).UTC(),
 		Aborted:     true,
 		AbortReason: "something went wrong",
 		PullRequests: []deploy.PullRequestReference{
