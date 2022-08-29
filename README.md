@@ -79,6 +79,8 @@ Deploys are tracked per channel. This means that different channels can run diff
 
     <img src="../master/docs/deploy-abort-reason.png" alt="Deploy aborted with reason announcement" height="42">
 
+**Note: If you are currently waiting on the queue, you can use `abort` to remove yourself from it without impacting the current lock.**
+
 ### Deploy status in channel topic
 
 In addition to announcing deploys in channel you may find it useful to have a small sign in the channel topic. This way you can quickly check
