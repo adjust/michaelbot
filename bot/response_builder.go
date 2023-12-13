@@ -18,7 +18,7 @@ const (
 /deploy <subject> — announce deploy of <subject> in channel
 /deploy status — show deploy status in channel
 /deploy done — finish deploy
-/deploy abort [<reason>] — abort current deploy, optionally providing a reason
+/deploy abort [<reason>] — abort current deploy, optionally providing a reason, or remove yourself from queue
 /deploy history — get a link to history of deploys in this channel`
 	errorMessage                   = "`%s` returned an error %s"
 	noRunningDeploysMessage        = "No one is deploying at the moment"
