@@ -139,12 +139,10 @@ func main() {
 
 	log.Printf("Michael Buffer v%s is listening on %s", version, srv.Addr)
 
-	signals := make(chan os.Signal)
+	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
 
-	select {
-	case <-signals:
-		log.Println("signal received, shutting down...")
-		srv.Shutdown()
-	}
+	<-signals
+	log.Println("signal received, shutting down...")
+	srv.Shutdown()
 }
