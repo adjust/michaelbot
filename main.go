@@ -81,24 +81,25 @@ func main() {
 		deployDashboard *dashboard.Dashboard
 	)
 
-	var repository deploy.Repository
 	if boltDBPath := os.Getenv("BOLTDB_PATH"); boltDBPath != "" {
 		log.Printf("writing deploy history into a BoltDB in %s", boltDBPath)
 
-		repository, err := deploy.NewBoltDBStore(boltDBPath)
+		store, err := deploy.NewBoltDBStore(boltDBPath)
 		if err != nil {
 			log.Fatalf("failed to open deploy DB: %s", err)
 		}
 
-		slackBot = bot.New(slackSigningSecret, githubToken, repository)
+		slackBot = bot.New(slackSigningSecret, githubToken, store)
+		deployDashboard = dashboard.New(store)
 	} else {
 		log.Println("BOLTDB_PATH env variable not set, keeping deploy history in memory")
 
-		repository := deploy.NewInMemoryStore()
-		slackBot = bot.New(slackSigningSecret, githubToken, repository)
+		store := deploy.NewInMemoryStore()
+
+		slackBot = bot.New(slackSigningSecret, githubToken, store)
+		deployDashboard = dashboard.New(store)
 	}
 
-	deployDashboard = dashboard.New(repository)
 	if slackWebAPIToken := os.Getenv("SLACK_WEBAPI_TOKEN"); slackWebAPIToken != "" {
 		api := slack.NewWebAPI(slackWebAPIToken, nil)
 		// Update channel topic to reflect current deploy status
