@@ -97,7 +97,7 @@ func TestParseChannelAccessTokenClaims_SignatureMismatch(t *testing.T) {
 }
 
 func TestParseChannelAccessTokenClaims_UnexpectedSigningMethod(t *testing.T) {
-	pkey, err := rsa.GenerateKey(rand.Reader, 512)
+	pkey, err := rsa.GenerateKey(rand.Reader, 2048)
 	require.NoError(t, err)
 
 	claims := auth.JWTChannelClaims{
