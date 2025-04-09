@@ -153,7 +153,7 @@ func (api *WebAPI) Call(method string, params url.Values) (response []byte, u *u
 		params = url.Values{}
 	}
 
-	params.Add("token", api.token)
+	req.Header.Set("Authorization", "Bearer "+api.token)
 	req.URL.RawQuery = params.Encode()
 
 	resp, err := api.c.Do(req)
@@ -198,7 +198,6 @@ func wrapError(err error, method string, url *url.URL) *WebAPIError {
 	}
 
 	if url != nil {
-		url.Query().Set("token", "[hidden]")
 		e.URL = url.String()
 	}
 
