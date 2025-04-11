@@ -27,6 +27,11 @@ func (h *Dashboard) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if h.repo == nil {
+		http.Error(w, "Repository not initialized", http.StatusInternalServerError)
+		return
+	}
+
 	var history []deploy.Deploy
 	if v := r.FormValue("since"); v != "" {
 		timeSince, err := time.Parse(time.RFC3339, v)

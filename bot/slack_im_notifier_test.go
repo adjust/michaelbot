@@ -15,6 +15,7 @@ import (
 
 func TestSlackIMNotifier_DeployCompleted(t *testing.T) {
 	const webAPIToken = "xxxxx-token1"
+	expectedAuthHeader := "Bearer " + webAPIToken
 
 	d := deploy.Deploy{
 		User:    slack.User{ID: "U1", Name: "author"},
@@ -37,13 +38,13 @@ func TestSlackIMNotifier_DeployCompleted(t *testing.T) {
 
 	mux.HandleFunc("/users.list", func(w http.ResponseWriter, r *http.Request) {
 		requestNum.UsersList++
-		assert.Equal(t, webAPIToken, r.FormValue("token"))
+		assert.Equal(t, expectedAuthHeader, r.Header.Get("Authorization"))
 
 		fmt.Fprint(w, `{"ok":true,"members":[{"id":"R1","name":"recipient1"},{"id":"R2","name":"recipient2"},{"id":"R3","name":"recipient3"}]}`)
 	})
 	mux.HandleFunc("/conversations.open", func(w http.ResponseWriter, r *http.Request) {
 		requestNum.IMOpen++
-		assert.Equal(t, webAPIToken, r.FormValue("token"))
+		assert.Equal(t, expectedAuthHeader, r.Header.Get("Authorization"))
 
 		if userID := r.FormValue("users"); assert.NotEmpty(t, userID) {
 			fmt.Fprintf(w, `{"ok":true,"channel":{"id":"DM%s"}}`, userID)
@@ -52,7 +53,7 @@ func TestSlackIMNotifier_DeployCompleted(t *testing.T) {
 		}
 	})
 	mux.HandleFunc("/chat.postMessage", func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, webAPIToken, r.FormValue("token"))
+		assert.Equal(t, expectedAuthHeader, r.Header.Get("Authorization"))
 
 		if channelID := r.FormValue("channel"); assert.NotEmpty(t, channelID) {
 			receivers = append(receivers, channelID)
@@ -94,6 +95,7 @@ func TestSlackIMNotifier_DeployCompleted(t *testing.T) {
 
 func TestSlackIMNotifier_DeployStart_Warning(t *testing.T) {
 	const webAPIToken = "xxxxx-token1"
+	expectedAuthHeader := "Bearer " + webAPIToken
 
 	d := deploy.Deploy{
 		User:    slack.User{ID: "U1", Name: "author"},
@@ -111,7 +113,7 @@ func TestSlackIMNotifier_DeployStart_Warning(t *testing.T) {
 
 	mux.HandleFunc("/conversations.open", func(w http.ResponseWriter, r *http.Request) {
 		requestNum.IMOpen++
-		assert.Equal(t, webAPIToken, r.FormValue("token"))
+		assert.Equal(t, expectedAuthHeader, r.Header.Get("Authorization"))
 
 		if userID := r.FormValue("users"); assert.NotEmpty(t, userID) {
 			fmt.Fprintf(w, `{"ok":true,"channel":{"id":"DM%s"}}`, userID)
@@ -122,7 +124,7 @@ func TestSlackIMNotifier_DeployStart_Warning(t *testing.T) {
 
 	mux.HandleFunc("/chat.postMessage", func(w http.ResponseWriter, r *http.Request) {
 		requestNum.IMPostMessage++
-		assert.Equal(t, webAPIToken, r.FormValue("token"))
+		assert.Equal(t, expectedAuthHeader, r.Header.Get("Authorization"))
 
 		if channelID := r.FormValue("channel"); assert.NotEmpty(t, channelID) {
 			receivers = append(receivers, channelID)
@@ -154,6 +156,7 @@ func TestSlackIMNotifier_DeployStart_Warning(t *testing.T) {
 
 func TestSlackIMNotifier_DeployStart_CompletedBeforeWarning(t *testing.T) {
 	const webAPIToken = "xxxxx-token1"
+	expectedAuthHeader := "Bearer " + webAPIToken
 
 	d := deploy.Deploy{
 		User:    slack.User{ID: "U1", Name: "author"},
@@ -170,11 +173,13 @@ func TestSlackIMNotifier_DeployStart_CompletedBeforeWarning(t *testing.T) {
 
 	mux.HandleFunc("/conversations.open", func(w http.ResponseWriter, r *http.Request) {
 		requestNum.IMOpen++
+		assert.Equal(t, expectedAuthHeader, r.Header.Get("Authorization"))
 		fmt.Println(r)
 	})
 
 	mux.HandleFunc("/chat.postMessage", func(w http.ResponseWriter, r *http.Request) {
 		requestNum.IMPostMessage++
+		assert.Equal(t, expectedAuthHeader, r.Header.Get("Authorization"))
 	})
 
 	api := slack.NewWebAPI(webAPIToken, nil)
@@ -191,6 +196,7 @@ func TestSlackIMNotifier_DeployStart_CompletedBeforeWarning(t *testing.T) {
 
 func TestSlackIMNotifier_DeployStart_AbortBeforeWarning(t *testing.T) {
 	const webAPIToken = "xxxxx-token1"
+	expectedAuthHeader := "Bearer " + webAPIToken
 
 	d := deploy.Deploy{
 		User:    slack.User{ID: "U1", Name: "author"},
@@ -207,11 +213,13 @@ func TestSlackIMNotifier_DeployStart_AbortBeforeWarning(t *testing.T) {
 
 	mux.HandleFunc("/conversations.open", func(w http.ResponseWriter, r *http.Request) {
 		requestNum.IMOpen++
+		assert.Equal(t, expectedAuthHeader, r.Header.Get("Authorization"))
 		fmt.Println(r)
 	})
 
 	mux.HandleFunc("/chat.postMessage", func(w http.ResponseWriter, r *http.Request) {
 		requestNum.IMPostMessage++
+		assert.Equal(t, expectedAuthHeader, r.Header.Get("Authorization"))
 	})
 
 	api := slack.NewWebAPI(webAPIToken, nil)

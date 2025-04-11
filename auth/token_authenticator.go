@@ -33,7 +33,19 @@ func (h *ChannelAuthenticator) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if token := r.FormValue("token"); token == "" || !h.auth.Authenticate(token) {
+	// Check for Authorization header
+	authHeader := r.Header.Get("Authorization")
+	token := ""
+	if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+		token = authHeader[7:]
+	}
+
+	// Fallback to form value if Authorization header is not present
+	if token == "" {
+		token = r.FormValue("token")
+	}
+
+	if token == "" || !h.auth.Authenticate(token) {
 		h.handler.ServeHTTP(w, r)
 		return
 	}

@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
 	"time"
@@ -102,6 +103,7 @@ func (b *ResponseBuilder) DeployAnnouncement(d deploy.Deploy) *slack.Response {
 	for _, ref := range d.PullRequests {
 		pr, err := b.githubClient.GetPullRequest(ref.Repository, ref.ID)
 		if err != nil {
+			log.Printf("Error getting pull request: %s", err)
 			response.Attachments = append(response.Attachments, slack.Attachment{
 				Title:     ref.Repository + "#" + ref.ID,
 				TitleLink: "https://github.com/" + ref.Repository + "/pulls/" + ref.ID,

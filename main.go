@@ -63,13 +63,13 @@ func main() {
 		printVersion()
 	}
 
-	slackToken := os.Getenv("SLACK_TOKEN")
-	if slackToken == "" {
-		log.Fatal("Missing SLACK_TOKEN env variable")
-	}
-
 	log.SetOutput(os.Stderr)
 	log.SetFlags(5)
+
+	slackSigningSecret := os.Getenv("SLACK_SIGNING_SECRET")
+	if slackSigningSecret == "" {
+		log.Fatal("SLACK_SIGNING_SECRET env variable must be set")
+	}
 
 	githubToken := os.Getenv("GITHUB_TOKEN")
 	if githubToken == "" {
@@ -80,6 +80,7 @@ func main() {
 		slackBot        *bot.Bot
 		deployDashboard *dashboard.Dashboard
 	)
+
 	if boltDBPath := os.Getenv("BOLTDB_PATH"); boltDBPath != "" {
 		log.Printf("writing deploy history into a BoltDB in %s", boltDBPath)
 
@@ -88,14 +89,15 @@ func main() {
 			log.Fatalf("failed to open deploy DB: %s", err)
 		}
 
+		slackBot = bot.New(slackSigningSecret, githubToken, store)
 		deployDashboard = dashboard.New(store)
-		slackBot = bot.New(slackToken, githubToken, store)
 	} else {
 		log.Println("BOLTDB_PATH env variable not set, keeping deploy history in memory")
 
 		store := deploy.NewInMemoryStore()
+
+		slackBot = bot.New(slackSigningSecret, githubToken, store)
 		deployDashboard = dashboard.New(store)
-		slackBot = bot.New(slackToken, githubToken, store)
 	}
 
 	if slackWebAPIToken := os.Getenv("SLACK_WEBAPI_TOKEN"); slackWebAPIToken != "" {
@@ -137,12 +139,10 @@ func main() {
 
 	log.Printf("Michael Buffer v%s is listening on %s", version, srv.Addr)
 
-	signals := make(chan os.Signal)
+	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
 
-	select {
-	case <-signals:
-		log.Println("signal received, shutting down...")
-		srv.Shutdown()
-	}
+	<-signals
+	log.Println("signal received, shutting down...")
+	srv.Shutdown()
 }

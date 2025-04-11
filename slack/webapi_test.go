@@ -20,7 +20,7 @@ func TestWebAPI_Call_WithParams(t *testing.T) {
 	mux.HandleFunc("/methodName", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "value1", r.FormValue("key1"))
 		assert.Equal(t, "value2", r.FormValue("key2"))
-		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, "Bearer xxxx-token-12345", r.Header.Get("Authorization"))
 
 		requestNum++
 		w.Write([]byte(`{"ok":true}`))
@@ -45,7 +45,7 @@ func TestWebAPI_Call_WithoutParams(t *testing.T) {
 
 	var requestNum int
 	mux.HandleFunc("/methodName", func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, "Bearer xxxx-token-12345", r.Header.Get("Authorization"))
 
 		requestNum++
 		w.Write([]byte(`{"ok":true}`))
@@ -66,7 +66,7 @@ func TestWebAPI_Call_WebAPIError(t *testing.T) {
 
 	var requestNum int
 	mux.HandleFunc("/methodName", func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, "Bearer xxxx-token-12345", r.Header.Get("Authorization"))
 
 		requestNum++
 		w.Write([]byte(`{"ok":false,"error":"an error occurred"}`))
@@ -121,7 +121,7 @@ func TestWebAPI_ChannelsSetTopic(t *testing.T) {
 	var requestNum int
 	mux.HandleFunc("/conversations.setTopic", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "CHANNELID1", r.FormValue("channel"))
-		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, "Bearer xxxx-token-12345", r.Header.Get("Authorization"))
 		assert.Equal(t, "Example topic", r.FormValue("topic"))
 
 		requestNum++
@@ -142,7 +142,7 @@ func TestWebAPI_ChannelsSetTopic_ErrorHandling(t *testing.T) {
 	var requestNum int
 	mux.HandleFunc("/conversations.setTopic", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "CHANNELID1", r.FormValue("channel"))
-		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, "Bearer xxxx-token-12345", r.Header.Get("Authorization"))
 		assert.Equal(t, "Example topic", r.FormValue("topic"))
 
 		requestNum++
@@ -164,7 +164,7 @@ func TestWebAPI_ChannelsGetTopic(t *testing.T) {
 	var requestNum int
 	mux.HandleFunc("/conversations.info", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "CHANNELID1", r.FormValue("channel"))
-		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, "Bearer xxxx-token-12345", r.Header.Get("Authorization"))
 
 		requestNum++
 		w.Write([]byte(`{"ok":true,"channel":{"topic":{"value":"Example topic"}}}`))
@@ -187,7 +187,7 @@ func TestWebAPI_ChannelsGetTopic_ErrorHandling(t *testing.T) {
 	var requestNum int
 	mux.HandleFunc("/conversations.info", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "CHANNELID1", r.FormValue("channel"))
-		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, "Bearer xxxx-token-12345", r.Header.Get("Authorization"))
 
 		requestNum++
 		w.Write([]byte(`{"ok":false,"error":"channel not found"}`))
@@ -207,7 +207,7 @@ func TestWebAPI_ListUsers(t *testing.T) {
 
 	var requestNum int
 	mux.HandleFunc("/users.list", func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, "Bearer xxxx-token-12345", r.Header.Get("Authorization"))
 
 		requestNum++
 		w.Write([]byte(`{"ok":true,"members":[{"id":"U1","name":"user1"},{"id":"U2","name":"user2"}]}`))
@@ -232,7 +232,7 @@ func TestWebAPI_ListUsers_ErrorHandling(t *testing.T) {
 
 	var requestNum int
 	mux.HandleFunc("/users.list", func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, "Bearer xxxx-token-12345", r.Header.Get("Authorization"))
 
 		requestNum++
 		w.Write([]byte(`{"ok":false,"error":"no users"`))
@@ -254,7 +254,7 @@ func TestWebAPI_PostMessage_WithoutAttachments(t *testing.T) {
 
 	var requestNum int
 	mux.HandleFunc("/chat.postMessage", func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, "Bearer xxxx-token-12345", r.Header.Get("Authorization"))
 		assert.Equal(t, "channel1", r.FormValue("channel"))
 		assert.Equal(t, "1", r.FormValue("link_names"))
 		assert.Equal(t, "true", r.FormValue("as_user"))
@@ -285,7 +285,7 @@ func TestWebAPI_PostMessage_WithAttachments(t *testing.T) {
 
 	var requestNum int
 	mux.HandleFunc("/chat.postMessage", func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, "Bearer xxxx-token-12345", r.Header.Get("Authorization"))
 		assert.Equal(t, "channel1", r.FormValue("channel"))
 		assert.Equal(t, "1", r.FormValue("link_names"))
 		assert.Equal(t, "true", r.FormValue("as_user"))
@@ -316,7 +316,7 @@ func TestWebAPI_OpenIMChannel(t *testing.T) {
 
 	var requestNum int
 	mux.HandleFunc("/conversations.open", func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, "Bearer xxxx-token-12345", r.Header.Get("Authorization"))
 		assert.Equal(t, user.ID, r.FormValue("users"))
 
 		requestNum++
@@ -341,7 +341,7 @@ func TestWebAPI_OpenIMChannel_ErrorHandling(t *testing.T) {
 
 	var requestNum int
 	mux.HandleFunc("/conversations.open", func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, "Bearer xxxx-token-12345", r.Header.Get("Authorization"))
 		assert.Equal(t, user.ID, r.FormValue("users"))
 
 		requestNum++

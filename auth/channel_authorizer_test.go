@@ -179,7 +179,7 @@ func TestChannelAuthorizerMiddleware_SignatureMismatch(t *testing.T) {
 }
 
 func TestChannelAuthorizerMiddleware_UnexpectedSigningMethod(t *testing.T) {
-	pkey, err := rsa.GenerateKey(rand.Reader, 512)
+	pkey, err := rsa.GenerateKey(rand.Reader, 2048)
 	require.NoError(t, err)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, auth.JWTChannelClaims{

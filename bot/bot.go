@@ -21,7 +21,7 @@ type DeployEventHandler interface {
 }
 
 type Bot struct {
-	slackToken    string
+	slackVerifier *SlackVerifier
 	deploys       *deploy.ChannelDeploys
 	responses     *ResponseBuilder
 	dashboardAuth auth.TokenIssuer
@@ -29,9 +29,9 @@ type Bot struct {
 	deployEventHandlers []DeployEventHandler
 }
 
-func New(slackToken, githubToken string, store deploy.Store) *Bot {
+func New(signingSecret, githubToken string, store deploy.Store) *Bot {
 	return &Bot{
-		slackToken:    slackToken,
+		slackVerifier: NewSlackVerifier(signingSecret),
 		deploys:       deploy.NewChannelDeploys(store),
 		responses:     NewResponseBuilder(github.NewClient(githubToken, nil)),
 		dashboardAuth: auth.None,
@@ -56,8 +56,8 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.PostFormValue("token") != b.slackToken {
-		http.Error(w, "Invalid token", http.StatusForbidden)
+	if !b.slackVerifier.Verify(r) {
+		http.Error(w, "Invalid signature", http.StatusForbidden)
 		return
 	}
 
