@@ -7,6 +7,8 @@ Michael
 
 Announce deploys in Slack channels.
 
+Slack app: https://api.slack.com/apps/A08KWH8PJCC/general
+
 Instance Setup 
 --------------
 The instance is created on AWS backend account in region us-east-2 (Ohio). This instance has a public IP and is accessible through SSH using public/private key pairs. 
